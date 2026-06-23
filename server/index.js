@@ -2,7 +2,7 @@ require('dotenv').config(); // must be first — loads env before anything else 
 
 const express = require('express');
 const cors = require('cors');
-const { sequelize } = require('./config/database');
+const { sequelize } = require('./models'); // registry — loads all models before sync
 
 const app = express();
 const PORT = process.env.PORT || 5000;
