@@ -18,6 +18,10 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true,
     validate: { isEmail: { msg: 'Must be a valid email' } },
+    set(value) {
+      // normalize so Omri@Test.com and omri@test.com are the same account
+      this.setDataValue('email', String(value).trim().toLowerCase());
+    },
   },
   password: {
     type: DataTypes.STRING,
