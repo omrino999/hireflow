@@ -8,6 +8,7 @@ const {
   fitAnalysis,
   tailorCv,
   interviewPrep,
+  improveCv,
 } = require('../controllers/aiController');
 
 // All AI routes require login
@@ -24,6 +25,7 @@ const aiLimiter = rateLimit({
 router.use(aiLimiter);
 
 router.post('/generate-cv', generateCv);
+router.post('/improve-cv', improveCv);
 router.post('/career-paths', careerPaths);
 router.post('/fit-analysis/:jobId', fitAnalysis);
 router.post('/tailor-cv/:jobId', tailorCv);

@@ -25,6 +25,10 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 // Global error handler — catches any error passed via next(err)
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  // multer file-upload errors (size limit, bad type) are client errors
+  if (err.name === 'MulterError' || err.status === 400) {
+    return res.status(400).json({ error: err.message });
+  }
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
 });
 

@@ -1,4 +1,5 @@
 const { Profile } = require('../models');
+const { extractText } = require('../services/cvParser');
 
 // Only these fields can be set from the request body.
 // AI-generated fields (generatedCv, careerPaths) are written by the AI layer, not the client.
@@ -55,4 +56,36 @@ const deleteProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, upsertProfile, deleteProfile };
+// POST /api/profile/upload-cv — extract text from an uploaded PDF/DOCX into cvText
+const uploadCv = async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    let text;
+    try {
+      text = await extractText(req.file.buffer, req.file.mimetype);
+    } catch (err) {
+      return res.status(err.status || 400).json({ error: err.message });
+    }
+
+    text = (text || '').trim();
+    if (!text) {
+      return res.status(422).json({ error: 'Could not read any text from this file' });
+    }
+
+    let profile = await Profile.findOne({ where: { userId: req.user.id } });
+    if (profile) {
+      await profile.update({ cvText: text });
+    } else {
+      profile = await Profile.create({ userId: req.user.id, cvText: text });
+    }
+    res.json({ cvText: profile.cvText, length: text.length });
+  } catch (err) {
+    if (err.name === 'SequelizeValidationError') {
+      return res.status(400).json({ error: err.errors[0].message });
+    }
+    next(err);
+  }
+};
+
+module.exports = { getProfile, upsertProfile, deleteProfile, uploadCv };

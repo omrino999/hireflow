@@ -147,10 +147,22 @@ function interviewPrep(jobDescription, cvText) {
   );
 }
 
+// 6. Suggest improvements to an existing CV (does not rewrite it)
+function improveCv(cvText) {
+  return textCall(
+    `Review this CV and suggest concrete improvements. Return Markdown with a short ` +
+      `overall assessment, then a bulleted list of specific, actionable suggestions ` +
+      `(wording, structure, missing sections, quantifying achievements, ATS keywords). ` +
+      `Do NOT rewrite the whole CV — focus on what to improve and why.\n\n${cvText}`,
+    1500
+  );
+}
+
 module.exports = {
   generateCv,
   careerPaths,
   fitAnalysis,
   tailorCv,
   interviewPrep,
+  improveCv,
 };

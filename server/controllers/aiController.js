@@ -133,4 +133,20 @@ const interviewPrep = async (req, res, next) => {
   }
 };
 
-module.exports = { generateCv, careerPaths, fitAnalysis, tailorCv, interviewPrep };
+// POST /api/ai/improve-cv
+const improveCv = async (req, res, next) => {
+  try {
+    const profile = await getProfile(req.user.id);
+    const cvText = resolveCvText(profile);
+    if (!cvText) return res.status(400).json({ error: 'Add or upload a CV first' });
+
+    const suggestions = await runAI(res, next, () => ai.improveCv(cvText));
+    if (suggestions === null) return;
+
+    res.json({ suggestions });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { generateCv, careerPaths, fitAnalysis, tailorCv, interviewPrep, improveCv };
