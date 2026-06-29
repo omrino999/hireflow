@@ -53,6 +53,23 @@ const JobApplication = sequelize.define('JobApplication', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  // --- AI result fields (written by the AI layer only, never the client) ---
+  fitScore: {
+    type: DataTypes.INTEGER, // 0-100 match score
+    allowNull: true,
+  },
+  fitAnalysis: {
+    type: DataTypes.TEXT, // AI explanation of fit + gaps
+    allowNull: true,
+  },
+  tailoredCv: {
+    type: DataTypes.TEXT, // AI-tailored CV for this specific job
+    allowNull: true,
+  },
+  interviewQuestions: {
+    type: DataTypes.JSON, // AI-generated Q&A array for this job
+    allowNull: true,
+  },
 });
 
 module.exports = JobApplication;
