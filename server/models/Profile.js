@@ -15,10 +15,12 @@ const Profile = sequelize.define('Profile', {
   rawDescription: {
     type: DataTypes.TEXT,
     allowNull: true, // user's free-text self-description
+    validate: { len: { args: [0, 5000], msg: 'Description too long (max 5000 characters)' } },
   },
   cvText: {
     type: DataTypes.TEXT,
     allowNull: true, // uploaded existing CV, or the chosen working CV
+    validate: { len: { args: [0, 20000], msg: 'CV too long (max 20000 characters)' } },
   },
   generatedCv: {
     type: DataTypes.TEXT,

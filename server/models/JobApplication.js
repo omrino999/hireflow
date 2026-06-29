@@ -28,6 +28,7 @@ const JobApplication = sequelize.define('JobApplication', {
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
+    validate: { len: { args: [0, 15000], msg: 'Job description too long (max 15000 characters)' } },
   },
   status: {
     type: DataTypes.ENUM('saved', 'applied', 'interview', 'offer', 'rejected'),
@@ -52,14 +53,15 @@ const JobApplication = sequelize.define('JobApplication', {
   notes: {
     type: DataTypes.TEXT,
     allowNull: true,
+    validate: { len: { args: [0, 2000], msg: 'Notes too long (max 2000 characters)' } },
   },
   // --- AI result fields (written by the AI layer only, never the client) ---
   fitScore: {
-    type: DataTypes.INTEGER, // 0-100 match score
+    type: DataTypes.INTEGER, // 0-100 match score (own column so we can sort by it)
     allowNull: true,
   },
   fitAnalysis: {
-    type: DataTypes.TEXT, // AI explanation of fit + gaps
+    type: DataTypes.JSON, // full AI fit result: { score, summary, strengths, gaps }
     allowNull: true,
   },
   tailoredCv: {

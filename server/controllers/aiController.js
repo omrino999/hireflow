@@ -80,7 +80,8 @@ const fitAnalysis = async (req, res, next) => {
     const result = await runAI(res, next, () => ai.fitAnalysis(cvText, job.description));
     if (result === null) return;
 
-    await job.update({ fitScore: result.score, fitAnalysis: result.summary });
+    // store the full result so strengths/gaps survive a reload, plus score on its own column
+    await job.update({ fitScore: result.score, fitAnalysis: result });
     res.json(result);
   } catch (err) {
     next(err);
