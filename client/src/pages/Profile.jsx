@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import Markdown from '../components/Markdown';
+import CvDocument from '../components/CvDocument';
+import AiLoader from '../components/AiLoader';
 
 const MATCH_STYLES = {
   strong: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300',
@@ -97,7 +99,8 @@ export default function Profile() {
 
   if (loading) return <div className="text-slate-400">Loading profile…</div>;
 
-  const hasCv = profile?.cvText || profile?.generatedCv;
+  const hasInput = !!(profile?.cvText || profile?.generatedCv || profile?.rawDescription);
+  const hasCv = !!(profile?.cvText || profile?.generatedCv);
   const paths = profile?.careerPaths;
 
   return (
@@ -107,33 +110,40 @@ export default function Profile() {
       {error && <div className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{error}</div>}
       {msg && <div className="rounded-md bg-green-50 px-4 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">{msg}</div>}
 
-      {/* About you */}
+      {/* ── About you ── */}
       <section className={card}>
         <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">About you</h2>
         <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-          A free-text description of your background. The AI uses this to generate a CV and suggest career paths.
+          Describe your background in free text. The AI uses this to generate a CV and suggest career paths.
         </p>
         <textarea
           value={description} onChange={(e) => setDescription(e.target.value)} rows={5} maxLength={5000}
           placeholder="e.g. Junior full-stack dev. React, Node, Python, SQL. Built a supermarket app and a crypto tracker. John Bryce grad 2026…"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
         />
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex flex-wrap items-center gap-3">
           <span className="text-xs text-slate-400">{description.length}/5000</span>
-          <button onClick={saveDescription} disabled={busy === 'desc'} className={btn}>
-            {busy === 'desc' ? 'Saving…' : 'Save'}
-          </button>
+          <div className="ml-auto flex gap-2">
+            <button onClick={saveDescription} disabled={busy === 'desc'} className={btnOutline}>
+              {busy === 'desc' ? 'Saving…' : 'Save'}
+            </button>
+            <button onClick={generateCv} disabled={busy === 'gen' || !profile?.rawDescription} className={btn}
+              title={!profile?.rawDescription ? 'Save a description first' : ''}>
+              ✨ Generate CV
+            </button>
+          </div>
         </div>
+        {busy === 'gen' && <AiLoader label="Writing your CV" />}
       </section>
 
-      {/* Your CV */}
+      {/* ── Your CV & career fit ── */}
       <section className={card}>
-        <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">Your CV</h2>
+        <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">Your CV & career fit</h2>
         <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-          Upload an existing CV (PDF or DOCX), or generate one from your description.
+          Upload an existing CV or use the generated one — then see which roles fit you.
         </p>
 
-        {/* Drag-and-drop upload zone */}
+        {/* Drag-and-drop upload */}
         <div
           onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
           onClick={() => fileRef.current?.click()}
@@ -147,24 +157,6 @@ export default function Profile() {
             {busy === 'upload' ? 'Uploading…' : '📄 Drag a PDF/DOCX here, or click to browse'}
           </p>
           <input ref={fileRef} type="file" accept=".pdf,.docx" onChange={(e) => uploadFile(e.target.files?.[0])} className="hidden" />
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-3">
-          <button onClick={generateCv} disabled={busy === 'gen' || !profile?.rawDescription} className={btnOutline}
-            title={!profile?.rawDescription ? 'Save a description first' : ''}>
-            {busy === 'gen' ? 'Generating…' : '✨ Generate from description'}
-          </button>
-
-          {hasCv && (
-            <>
-              <button onClick={() => improveCv('quick')} disabled={busy.startsWith('improve')} className={btnOutline}>
-                {busy === 'improve-quick' ? 'Analyzing…' : '⚡ Quick tips'}
-              </button>
-              <button onClick={() => improveCv('detailed')} disabled={busy.startsWith('improve')} className={btnOutline}>
-                {busy === 'improve-detailed' ? 'Analyzing…' : '🔍 Detailed review'}
-              </button>
-            </>
-          )}
         </div>
 
         {profile?.cvText && (
@@ -183,65 +175,72 @@ export default function Profile() {
         {profile?.generatedCv && (
           <details open className="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-700">
             <summary className="cursor-pointer text-sm font-semibold text-indigo-600 dark:text-indigo-400">AI-generated CV (click to collapse)</summary>
-            <div className="mt-2 max-h-96 overflow-y-auto">
-              <Markdown>{profile.generatedCv}</Markdown>
+            <div className="mt-3">
+              <CvDocument markdown={profile.generatedCv} filename="my-cv" />
             </div>
           </details>
         )}
+
+        {/* Improve actions */}
+        {hasCv && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button onClick={() => improveCv('quick')} disabled={busy.startsWith('improve')} className={btnOutline}>⚡ Quick tips</button>
+            <button onClick={() => improveCv('detailed')} disabled={busy.startsWith('improve')} className={btnOutline}>🔍 Detailed review</button>
+          </div>
+        )}
+        {busy.startsWith('improve') && <AiLoader label="Reviewing your CV" />}
 
         {suggestions && (
           <details open className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
-            <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold text-amber-700 dark:text-amber-400">
-              <span>Improvement suggestions (click to collapse)</span>
-            </summary>
-            <div className="mt-2 max-h-96 overflow-y-auto">
-              <Markdown>{suggestions}</Markdown>
-            </div>
+            <summary className="cursor-pointer text-sm font-semibold text-amber-700 dark:text-amber-400">Improvement suggestions (click to collapse)</summary>
+            <div className="mt-2 max-h-96 overflow-y-auto"><Markdown>{suggestions}</Markdown></div>
             <button onClick={() => setSuggestions('')} className="mt-2 text-xs text-slate-400 hover:underline">Dismiss</button>
           </details>
         )}
-      </section>
 
-      {/* Career paths */}
-      <section className={card}>
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Career paths</h2>
-          <button onClick={findPaths} disabled={busy === 'paths' || !hasCv} className={btn}
-            title={!hasCv ? 'Add a CV or description first' : ''}>
-            {busy === 'paths' ? 'Finding…' : paths ? 'Refresh' : 'Find my paths'}
-          </button>
-        </div>
-        <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-          AI-suggested roles that fit your profile, plus skills to grow.
-        </p>
-
-        {!paths ? (
-          <div className="py-8 text-center text-sm text-slate-400">Run the analysis to see fitting roles.</div>
-        ) : (
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              {paths.roles?.map((r, i) => (
-                <div key={i} className="rounded-md border border-slate-200 p-3 dark:border-slate-700">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-900 dark:text-white">{r.title}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${MATCH_STYLES[r.matchLevel] || MATCH_STYLES.stretch}`}>
-                      {r.matchLevel}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{r.reasoning}</p>
-                </div>
-              ))}
-            </div>
-            {paths.upskill?.length > 0 && (
-              <div>
-                <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">Skills to grow</h3>
-                <ul className="list-inside list-disc text-sm text-slate-600 dark:text-slate-400">
-                  {paths.upskill.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
-            )}
+        {/* Career paths — only meaningful when there's input backing them */}
+        <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <div className="mb-1 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 dark:text-white">Career paths</h3>
+            <button onClick={findPaths} disabled={busy === 'paths' || !hasInput} className={btn}
+              title={!hasInput ? 'Add a description or CV first' : ''}>
+              {busy === 'paths' ? 'Finding…' : paths ? 'Refresh' : 'Find my paths'}
+            </button>
           </div>
-        )}
+          <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">AI-suggested roles that fit your profile, plus skills to grow.</p>
+
+          {busy === 'paths' && <AiLoader label="Matching you to roles" />}
+
+          {!hasInput ? (
+            <div className="py-8 text-center text-sm text-slate-400">Add a description or upload a CV above to discover fitting roles.</div>
+          ) : !paths ? (
+            <div className="py-8 text-center text-sm text-slate-400">Click “Find my paths” to see fitting roles.</div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                {paths.roles?.map((r, i) => (
+                  <div key={i} className="rounded-md border border-slate-200 p-3 dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-900 dark:text-white">{r.title}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${MATCH_STYLES[r.matchLevel] || MATCH_STYLES.stretch}`}>
+                        {r.matchLevel}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{r.reasoning}</p>
+                  </div>
+                ))}
+              </div>
+              {paths.upskill?.length > 0 && (
+                <div>
+                  <h4 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">Skills to grow</h4>
+                  <ul className="list-inside list-disc text-sm text-slate-600 dark:text-slate-400">
+                    {paths.upskill.map((s, i) => <li key={i}>{s}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );
