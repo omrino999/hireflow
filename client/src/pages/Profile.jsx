@@ -23,6 +23,8 @@ export default function Profile() {
   const [suggestions, setSuggestions] = useState('');
   const [busy, setBusy] = useState('');
   const [dragOver, setDragOver] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState('');
   const fileRef = useRef();
 
   const load = async () => {
@@ -80,6 +82,16 @@ export default function Profile() {
       setProfile((p) => ({ ...(p || {}), generatedCv: null }));
       flash('Generated CV deleted');
     } catch (err) { fail(err, 'Could not delete'); } finally { setBusy(''); }
+  };
+
+  const saveCvText = async () => {
+    setBusy('pasteSave'); setError('');
+    try {
+      const res = await api.put('/profile', { cvText: pasteText });
+      setProfile((p) => ({ ...(p || {}), cvText: res.data.cvText }));
+      setPasteOpen(false); setPasteText('');
+      flash('CV text saved');
+    } catch (err) { fail(err, 'Could not save'); } finally { setBusy(''); }
   };
 
   const onDrop = (e) => { e.preventDefault(); setDragOver(false); uploadFile(e.dataTransfer.files?.[0]); };
@@ -168,6 +180,26 @@ export default function Profile() {
           </p>
           <input ref={fileRef} type="file" accept=".pdf,.docx" onChange={(e) => uploadFile(e.target.files?.[0])} className="hidden" />
         </div>
+
+        {/* Manual fallback for PDFs that don't extract well (image-based / heavily designed) */}
+        <button onClick={() => setPasteOpen((v) => !v)} className="mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+          {pasteOpen ? 'Cancel' : '📝 Or paste CV text instead'}
+        </button>
+        {pasteOpen && (
+          <div className="mt-2">
+            <textarea
+              value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={6} maxLength={20000}
+              placeholder="Paste your CV text here (useful if a PDF doesn't read well)…"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-slate-400">{pasteText.length}/20000</span>
+              <button onClick={saveCvText} disabled={busy === 'pasteSave' || !pasteText.trim()} className={btn}>
+                {busy === 'pasteSave' ? 'Saving…' : 'Save CV text'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {profile?.cvText && (
           <details className="mt-4 rounded-md border border-slate-200 p-3 dark:border-slate-700">

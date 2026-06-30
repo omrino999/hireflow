@@ -63,14 +63,20 @@ const uploadCv = async (req, res, next) => {
 
     let text;
     try {
-      text = await extractText(req.file.buffer, req.file.mimetype);
+      text = await extractText(req.file.buffer, req.file.mimetype, req.file.originalname);
     } catch (err) {
       return res.status(err.status || 400).json({ error: err.message });
     }
 
     text = (text || '').trim();
-    if (!text) {
-      return res.status(422).json({ error: 'Could not read any text from this file' });
+    // Very little text usually means an image-based/scanned or heavily-designed PDF
+    // whose text layer didn't extract — tell the user instead of saving garbage.
+    if (text.length < 80) {
+      return res.status(422).json({
+        error:
+          'We could only read a little text from this file — it may be image-based or heavily designed. ' +
+          'Try a text-based PDF/DOCX, or paste your CV text manually.',
+      });
     }
 
     let profile = await Profile.findOne({ where: { userId: req.user.id } });
