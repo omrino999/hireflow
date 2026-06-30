@@ -15,9 +15,13 @@ const LIGHT_CSS = `
   a { color: #1d4ed8; }
 `;
 
+// Inline body style as well as the <style> block — Word's embedded-CSS support is
+// unreliable, but it honors inline styles and color inheritance.
+const BODY_STYLE = 'color:#111;background:#ffffff;font-family:Arial,Helvetica,sans-serif;';
+
 const buildHtml = (innerHTML, title) =>
   `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>` +
-  `<style>${LIGHT_CSS}</style></head><body>${innerHTML}</body></html>`;
+  `<style>${LIGHT_CSS}</style></head><body style="${BODY_STYLE}">${innerHTML}</body></html>`;
 
 // PDF: open a clean light document and trigger the browser's print → "Save as PDF".
 // Reliable, always light, no html2canvas/oklch issues.
