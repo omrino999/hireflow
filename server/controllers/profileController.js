@@ -88,4 +88,17 @@ const uploadCv = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, upsertProfile, deleteProfile, uploadCv };
+// DELETE /api/profile/generated-cv — clear the AI-generated CV (server-controlled,
+// so it bypasses the client write-protection on AI fields)
+const clearGeneratedCv = async (req, res, next) => {
+  try {
+    const profile = await Profile.findOne({ where: { userId: req.user.id } });
+    if (!profile) return res.status(404).json({ error: 'No profile' });
+    await profile.update({ generatedCv: null });
+    res.json({ message: 'Generated CV removed' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getProfile, upsertProfile, deleteProfile, uploadCv, clearGeneratedCv };

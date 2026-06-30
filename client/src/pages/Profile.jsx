@@ -72,6 +72,16 @@ export default function Profile() {
     } catch (err) { fail(err, 'Could not remove'); } finally { setBusy(''); }
   };
 
+  const deleteGeneratedCv = async () => {
+    if (!confirm('Delete the AI-generated CV?')) return;
+    setBusy('delGen'); setError('');
+    try {
+      await api.delete('/profile/generated-cv');
+      setProfile((p) => ({ ...(p || {}), generatedCv: null }));
+      flash('Generated CV deleted');
+    } catch (err) { fail(err, 'Could not delete'); } finally { setBusy(''); }
+  };
+
   const onDrop = (e) => { e.preventDefault(); setDragOver(false); uploadFile(e.dataTransfer.files?.[0]); };
   const onDragOver = (e) => { e.preventDefault(); setDragOver(true); };
   const onDragLeave = (e) => { e.preventDefault(); setDragOver(false); };
@@ -178,6 +188,10 @@ export default function Profile() {
             <div className="mt-3">
               <CvDocument markdown={profile.generatedCv} filename="my-cv" />
             </div>
+            <button onClick={deleteGeneratedCv} disabled={busy === 'delGen'}
+              className="mt-3 text-xs font-medium text-red-500 hover:underline">
+              {busy === 'delGen' ? 'Deleting…' : 'Delete generated CV'}
+            </button>
           </details>
         )}
 

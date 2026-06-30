@@ -7,6 +7,7 @@ const {
   upsertProfile,
   deleteProfile,
   uploadCv,
+  clearGeneratedCv,
 } = require('../controllers/profileController');
 const { PDF, DOCX } = require('../services/cvParser');
 
@@ -27,5 +28,6 @@ router.get('/', getProfile);
 router.put('/', upsertProfile);
 router.delete('/', deleteProfile);
 router.post('/upload-cv', upload.single('cv'), uploadCv);
+router.delete('/generated-cv', clearGeneratedCv);
 
 module.exports = router;
