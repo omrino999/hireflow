@@ -147,8 +147,16 @@ function interviewPrep(jobDescription, cvText) {
   );
 }
 
-// 6. Suggest improvements to an existing CV (does not rewrite it)
-function improveCv(cvText) {
+// 6. Suggest improvements to an existing CV (does not rewrite it).
+// mode 'quick' = fast, top 3 one-liners; 'detailed' = thorough review.
+function improveCv(cvText, mode = 'detailed') {
+  if (mode === 'quick') {
+    return textCall(
+      `Give the top 3 most impactful improvements for this CV — one concise line each, ` +
+        `as a Markdown bullet list. No preamble, no overall assessment.\n\n${cvText}`,
+      400
+    );
+  }
   return textCall(
     `Review this CV and suggest concrete improvements. Return Markdown with a short ` +
       `overall assessment, then a bulleted list of specific, actionable suggestions ` +

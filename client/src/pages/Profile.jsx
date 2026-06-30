@@ -19,7 +19,8 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [suggestions, setSuggestions] = useState('');
-  const [busy, setBusy] = useState(''); // which action is running
+  const [busy, setBusy] = useState('');
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
@@ -47,8 +48,7 @@ export default function Profile() {
     } catch (err) { fail(err, 'Could not save'); } finally { setBusy(''); }
   };
 
-  const onUpload = async (e) => {
-    const file = e.target.files[0];
+  const uploadFile = async (file) => {
     if (!file) return;
     setBusy('upload'); setError('');
     try {
@@ -59,6 +59,10 @@ export default function Profile() {
       flash(`CV uploaded (${res.data.length} characters)`);
     } catch (err) { fail(err, 'Upload failed'); } finally { setBusy(''); if (fileRef.current) fileRef.current.value = ''; }
   };
+
+  const onDrop = (e) => { e.preventDefault(); setDragOver(false); uploadFile(e.dataTransfer.files?.[0]); };
+  const onDragOver = (e) => { e.preventDefault(); setDragOver(true); };
+  const onDragLeave = (e) => { e.preventDefault(); setDragOver(false); };
 
   const runAI = async (key, fn) => {
     setBusy(key); setError('');
@@ -71,8 +75,8 @@ export default function Profile() {
     flash('CV generated');
   });
 
-  const improveCv = () => runAI('improve', async () => {
-    const res = await api.post('/ai/improve-cv');
+  const improveCv = (mode) => runAI(`improve-${mode}`, async () => {
+    const res = await api.post('/ai/improve-cv', { mode });
     setSuggestions(res.data.suggestions);
   });
 
@@ -119,21 +123,37 @@ export default function Profile() {
           Upload an existing CV (PDF or DOCX), or generate one from your description.
         </p>
 
-        <div className="flex flex-wrap gap-3">
-          <button onClick={() => fileRef.current?.click()} disabled={busy === 'upload'} className={btnOutline}>
-            {busy === 'upload' ? 'Uploading…' : '📄 Upload CV (PDF/DOCX)'}
-          </button>
-          <input ref={fileRef} type="file" accept=".pdf,.docx" onChange={onUpload} className="hidden" />
+        {/* Drag-and-drop upload zone */}
+        <div
+          onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
+          onClick={() => fileRef.current?.click()}
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition ${
+            dragOver
+              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
+              : 'border-slate-300 hover:border-slate-400 dark:border-slate-600 dark:hover:border-slate-500'
+          }`}
+        >
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {busy === 'upload' ? 'Uploading…' : '📄 Drag a PDF/DOCX here, or click to browse'}
+          </p>
+          <input ref={fileRef} type="file" accept=".pdf,.docx" onChange={(e) => uploadFile(e.target.files?.[0])} className="hidden" />
+        </div>
 
+        <div className="mt-3 flex flex-wrap gap-3">
           <button onClick={generateCv} disabled={busy === 'gen' || !profile?.rawDescription} className={btnOutline}
             title={!profile?.rawDescription ? 'Save a description first' : ''}>
             {busy === 'gen' ? 'Generating…' : '✨ Generate from description'}
           </button>
 
           {hasCv && (
-            <button onClick={improveCv} disabled={busy === 'improve'} className={btnOutline}>
-              {busy === 'improve' ? 'Analyzing…' : '🔍 Get improvement suggestions'}
-            </button>
+            <>
+              <button onClick={() => improveCv('quick')} disabled={busy.startsWith('improve')} className={btnOutline}>
+                {busy === 'improve-quick' ? 'Analyzing…' : '⚡ Quick tips'}
+              </button>
+              <button onClick={() => improveCv('detailed')} disabled={busy.startsWith('improve')} className={btnOutline}>
+                {busy === 'improve-detailed' ? 'Analyzing…' : '🔍 Detailed review'}
+              </button>
+            </>
           )}
         </div>
 
@@ -145,17 +165,24 @@ export default function Profile() {
         )}
 
         {profile?.generatedCv && (
-          <div className="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-700">
-            <h3 className="mb-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">AI-generated CV</h3>
-            <Markdown>{profile.generatedCv}</Markdown>
-          </div>
+          <details open className="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-700">
+            <summary className="cursor-pointer text-sm font-semibold text-indigo-600 dark:text-indigo-400">AI-generated CV (click to collapse)</summary>
+            <div className="mt-2 max-h-96 overflow-y-auto">
+              <Markdown>{profile.generatedCv}</Markdown>
+            </div>
+          </details>
         )}
 
         {suggestions && (
-          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
-            <h3 className="mb-2 text-sm font-semibold text-amber-700 dark:text-amber-400">Improvement suggestions</h3>
-            <Markdown>{suggestions}</Markdown>
-          </div>
+          <details open className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+            <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold text-amber-700 dark:text-amber-400">
+              <span>Improvement suggestions (click to collapse)</span>
+            </summary>
+            <div className="mt-2 max-h-96 overflow-y-auto">
+              <Markdown>{suggestions}</Markdown>
+            </div>
+            <button onClick={() => setSuggestions('')} className="mt-2 text-xs text-slate-400 hover:underline">Dismiss</button>
+          </details>
         )}
       </section>
 

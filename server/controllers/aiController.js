@@ -140,7 +140,8 @@ const improveCv = async (req, res, next) => {
     const cvText = resolveCvText(profile);
     if (!cvText) return res.status(400).json({ error: 'Add or upload a CV first' });
 
-    const suggestions = await runAI(res, next, () => ai.improveCv(cvText));
+    const mode = req.body && req.body.mode === 'quick' ? 'quick' : 'detailed';
+    const suggestions = await runAI(res, next, () => ai.improveCv(cvText, mode));
     if (suggestions === null) return;
 
     res.json({ suggestions });
