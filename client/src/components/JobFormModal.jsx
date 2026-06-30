@@ -1,36 +1,55 @@
 import { useState } from 'react';
 import { STATUSES } from './StatusBadge';
 
-const EMPTY = {
-  company: '', title: '', jobUrl: '', description: '',
-  status: 'saved', appliedAt: '', interviewAt: '', notes: '',
-};
+const today = () => new Date().toISOString().slice(0, 10);
+const APPLIED_OR_LATER = ['applied', 'interview', 'offer', 'rejected'];
 
 // Modal for creating or editing a job. `job` null = create mode.
 export default function JobFormModal({ job, onClose, onSave }) {
-  const [form, setForm] = useState(() => {
-    if (!job) return EMPTY;
-    return {
-      company: job.company || '', title: job.title || '', jobUrl: job.jobUrl || '',
-      description: job.description || '', status: job.status || 'saved',
-      appliedAt: job.appliedAt || '', interviewAt: job.interviewAt || '',
-      notes: job.notes || '',
-    };
-  });
+  const [form, setForm] = useState(() => ({
+    company: job?.company || '',
+    title: job?.title || '',
+    jobUrl: job?.jobUrl || '',
+    description: job?.description || '',
+    status: job?.status || 'saved',
+    appliedAt: job?.appliedAt || '',
+    notes: job?.notes || '',
+  }));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Applied date is a permanent fact: once set, it's locked (delete & re-add if wrong)
+  const appliedLocked = !!job?.appliedAt;
+  const showApplied = APPLIED_OR_LATER.includes(form.status);
+
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const onStatusChange = (e) => {
+    const status = e.target.value;
+    setForm((f) => {
+      const next = { ...f, status };
+      // auto-default applied date to today the moment a job becomes "applied" or later
+      if (APPLIED_OR_LATER.includes(status) && !next.appliedAt) next.appliedAt = today();
+      return next;
+    });
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSaving(true);
     try {
-      // strip empty date strings so we send null, not ""
-      const payload = { ...form };
-      if (!payload.appliedAt) delete payload.appliedAt;
-      if (!payload.interviewAt) delete payload.interviewAt;
+      const payload = {
+        company: form.company,
+        title: form.title,
+        jobUrl: form.jobUrl,
+        description: form.description,
+        status: form.status,
+        notes: form.notes,
+      };
+      // Send applied date only when relevant and not locked (locked = preserve existing).
+      // interviewAt is intentionally NOT sent here — it's managed by the interview modal.
+      if (showApplied && !appliedLocked && form.appliedAt) payload.appliedAt = form.appliedAt;
       await onSave(payload);
     } catch (err) {
       setError(err.response?.data?.error || 'Could not save');
@@ -73,21 +92,25 @@ export default function JobFormModal({ job, onClose, onSave }) {
             <input name="jobUrl" value={form.jobUrl} onChange={onChange} placeholder="https://…" className={input} />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={label}>Status</label>
-              <select name="status" value={form.status} onChange={onChange} className={`${input} capitalize`}>
+              <select name="status" value={form.status} onChange={onStatusChange} className={`${input} capitalize`}>
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div>
-              <label className={label}>Applied</label>
-              <input type="date" name="appliedAt" value={form.appliedAt} onChange={onChange} className={input} />
-            </div>
-            <div>
-              <label className={label}>Interview</label>
-              <input type="date" name="interviewAt" value={form.interviewAt} onChange={onChange} className={input} />
-            </div>
+            {showApplied && (
+              <div>
+                <label className={label}>Applied date</label>
+                {appliedLocked ? (
+                  <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                    {form.appliedAt} <span className="text-xs">(locked)</span>
+                  </div>
+                ) : (
+                  <input type="date" name="appliedAt" value={form.appliedAt} max={today()} onChange={onChange} className={input} />
+                )}
+              </div>
+            )}
           </div>
 
           <div>
