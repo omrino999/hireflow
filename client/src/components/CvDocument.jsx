@@ -19,7 +19,7 @@ export default function CvDocument({ markdown, filename = 'cv' }) {
     <div>
       <div className="mb-2 flex flex-wrap gap-2 text-xs">
         <button onClick={copy} className={chip}>{copied ? '✓ Copied' : 'Copy'}</button>
-        <button onClick={() => exportPdf(ref.current, filename)} className={chip} title="Opens the print dialog — choose “Save as PDF”">Download PDF</button>
+        <button onClick={() => exportPdf(markdown, filename)} className={chip}>Download PDF</button>
         <button onClick={() => exportDoc(ref.current, filename)} className={chip}>Download Word</button>
       </div>
       <div ref={ref} className="max-h-96 overflow-y-auto">

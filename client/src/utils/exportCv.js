@@ -23,16 +23,46 @@ const buildHtml = (innerHTML, title) =>
   `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>` +
   `<style>${LIGHT_CSS}</style></head><body style="${BODY_STYLE}">${innerHTML}</body></html>`;
 
-// PDF: open a clean light document and trigger the browser's print → "Save as PDF".
-// Reliable, always light, no html2canvas/oklch issues.
-export function exportPdf(element, filename = 'cv') {
-  if (!element) return;
-  const w = window.open('', '_blank', 'width=820,height=1000');
-  if (!w) { alert('Please allow pop-ups to download the PDF.'); return; }
-  w.document.write(buildHtml(element.innerHTML, filename));
-  w.document.close();
-  w.onafterprint = () => w.close();
-  setTimeout(() => { w.focus(); w.print(); }, 300);
+// PDF: build directly from the Markdown text with jsPDF — one-click download,
+// no popup, no print dialog, always light. Renders headings/bullets/spacing
+// (not rich HTML, but clean and readable for a CV).
+export async function exportPdf(markdown, filename = 'cv') {
+  if (!markdown) return;
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const margin = 48;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const maxW = pageW - margin * 2;
+  let y = margin;
+
+  const ensure = (h) => { if (y + h > pageH - margin) { doc.addPage(); y = margin; } };
+  const stripBold = (t) => t.replace(/\*\*(.*?)\*\*/g, '$1');
+
+  const write = (text, { size = 11, style = 'normal', indent = 0, gapAfter = 3 } = {}) => {
+    doc.setFont('helvetica', style);
+    doc.setFontSize(size);
+    doc.setTextColor(17, 17, 17); // always dark text on white
+    for (const w of doc.splitTextToSize(text, maxW - indent)) {
+      ensure(size + 4);
+      doc.text(w, margin + indent, y);
+      y += size + 4;
+    }
+    y += gapAfter;
+  };
+
+  for (const raw of markdown.replace(/\r/g, '').split('\n')) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { y += 6; continue; }
+    if (/^###\s+/.test(line)) { write(stripBold(line.replace(/^###\s+/, '')), { size: 12, style: 'bold', gapAfter: 3 }); }
+    else if (/^##\s+/.test(line)) { write(stripBold(line.replace(/^##\s+/, '')), { size: 14, style: 'bold', gapAfter: 4 }); }
+    else if (/^#\s+/.test(line)) { write(stripBold(line.replace(/^#\s+/, '')), { size: 18, style: 'bold', gapAfter: 6 }); }
+    else if (/^---+$/.test(line.trim())) { ensure(10); doc.setDrawColor(200); doc.line(margin, y, pageW - margin, y); y += 10; }
+    else if (/^[-*]\s+/.test(line)) { write('•  ' + stripBold(line.replace(/^[-*]\s+/, '')), { indent: 12, gapAfter: 1 }); }
+    else { write(stripBold(line), { gapAfter: 2 }); }
+  }
+
+  doc.save(`${filename}.pdf`);
 }
 
 // Word: save a clean light HTML-based .doc (Word opens it reliably).
