@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import Markdown from './Markdown';
-import { downloadPdf, downloadDoc, copyText } from '../utils/exportCv';
+import { exportPdf, exportDoc, copyText } from '../utils/exportCv';
 
 const chip =
   'rounded-md border border-slate-300 px-2.5 py-1 font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700';
@@ -19,8 +19,8 @@ export default function CvDocument({ markdown, filename = 'cv' }) {
     <div>
       <div className="mb-2 flex flex-wrap gap-2 text-xs">
         <button onClick={copy} className={chip}>{copied ? '✓ Copied' : 'Copy'}</button>
-        <button onClick={() => downloadPdf(ref.current, filename)} className={chip}>Download PDF</button>
-        <button onClick={() => downloadDoc(ref.current, filename)} className={chip}>Download Word</button>
+        <button onClick={() => exportPdf(ref.current, filename)} className={chip} title="Opens the print dialog — choose “Save as PDF”">Download PDF</button>
+        <button onClick={() => exportDoc(ref.current, filename)} className={chip}>Download Word</button>
       </div>
       <div ref={ref} className="max-h-96 overflow-y-auto">
         <Markdown>{markdown}</Markdown>
