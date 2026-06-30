@@ -60,6 +60,16 @@ export default function Profile() {
     } catch (err) { fail(err, 'Upload failed'); } finally { setBusy(''); if (fileRef.current) fileRef.current.value = ''; }
   };
 
+  const removeCv = async () => {
+    if (!confirm('Remove the uploaded CV?')) return;
+    setBusy('removeCv'); setError('');
+    try {
+      await api.put('/profile', { cvText: null });
+      setProfile((p) => ({ ...(p || {}), cvText: null }));
+      flash('Uploaded CV removed');
+    } catch (err) { fail(err, 'Could not remove'); } finally { setBusy(''); }
+  };
+
   const onDrop = (e) => { e.preventDefault(); setDragOver(false); uploadFile(e.dataTransfer.files?.[0]); };
   const onDragOver = (e) => { e.preventDefault(); setDragOver(true); };
   const onDragLeave = (e) => { e.preventDefault(); setDragOver(false); };
@@ -161,6 +171,12 @@ export default function Profile() {
           <details className="mt-4 rounded-md border border-slate-200 p-3 dark:border-slate-700">
             <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">Uploaded CV text</summary>
             <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-400">{profile.cvText}</pre>
+            <div className="mt-2 flex items-center gap-3 text-xs">
+              <span className="text-slate-400">Re-upload above to replace, or</span>
+              <button onClick={removeCv} disabled={busy === 'removeCv'} className="font-medium text-red-500 hover:underline">
+                {busy === 'removeCv' ? 'Removing…' : 'Remove CV'}
+              </button>
+            </div>
           </details>
         )}
 
