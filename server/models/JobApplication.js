@@ -55,6 +55,11 @@ const JobApplication = sequelize.define('JobApplication', {
     allowNull: true,
     validate: { len: { args: [0, 2000], msg: 'Notes too long (max 2000 characters)' } },
   },
+  isFavorite: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
   // --- AI result fields (written by the AI layer only, never the client) ---
   fitScore: {
     type: DataTypes.INTEGER, // 0-100 match score (own column so we can sort by it)

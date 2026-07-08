@@ -56,6 +56,13 @@ export default function JobDetail() {
     navigate('/jobs');
   };
 
+  const toggleFavorite = async () => {
+    const next = !job.isFavorite;
+    setJob((j) => ({ ...j, isFavorite: next }));
+    try { await api.put(`/jobs/${id}`, { isFavorite: next }); }
+    catch { setJob((j) => ({ ...j, isFavorite: !next })); }
+  };
+
   const runAI = async (key, fn) => {
     setBusy(key); setError('');
     try { await fn(); } catch (err) { fail(err, 'AI request failed'); } finally { setBusy(''); }
@@ -89,9 +96,19 @@ export default function JobDetail() {
       {/* Header / job info */}
       <section className={card}>
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{job.title}</h1>
-            <p className="text-slate-500 dark:text-slate-400">{job.company}</p>
+          <div className="flex items-start gap-2">
+            <button
+              onClick={toggleFavorite}
+              aria-label={job.isFavorite ? 'Unfavorite' : 'Favorite'}
+              title={job.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              className={`mt-1 text-xl leading-none ${job.isFavorite ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400 dark:text-slate-600'}`}
+            >
+              {job.isFavorite ? '★' : '☆'}
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{job.title}</h1>
+              <p className="text-slate-500 dark:text-slate-400">{job.company}</p>
+            </div>
           </div>
           <StatusBadge status={job.status} />
         </div>

@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import api from '../api/axios';
 import { useTheme } from '../context/ThemeContext';
-import { STATUSES } from '../components/StatusBadge';
+import StatusBadge, { STATUSES } from '../components/StatusBadge';
 
 const card = 'rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800';
 
@@ -49,6 +49,8 @@ export default function Dashboard() {
 
   const scored = jobs.filter((j) => j.fitScore != null);
   const avgFit = scored.length ? Math.round(scored.reduce((s, j) => s + j.fitScore, 0) / scored.length) : null;
+
+  const favorites = jobs.filter((j) => j.isFavorite);
 
   const axis = theme === 'dark' ? '#94a3b8' : '#64748b';
   const grid = theme === 'dark' ? '#334155' : '#e2e8f0';
@@ -138,7 +140,25 @@ export default function Dashboard() {
               )}
             </section>
 
-            <section className={`${card} lg:col-span-2`}>
+            <section className={card}>
+              <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">⭐ Starred jobs</h2>
+              {favorites.length === 0 ? (
+                <p className="text-sm text-slate-400">Star jobs you really want in the Jobs list.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {favorites.map((j) => (
+                    <li key={j.id} className="flex items-center justify-between py-2">
+                      <Link to={`/jobs/${j.id}`} className="text-sm font-medium text-slate-800 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">
+                        {j.title} <span className="font-normal text-slate-400">@ {j.company}</span>
+                      </Link>
+                      <StatusBadge status={j.status} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className={card}>
               <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">Upcoming interviews</h2>
               {upcoming.length === 0 ? (
                 <p className="text-sm text-slate-400">No interviews scheduled.</p>

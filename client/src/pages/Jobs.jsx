@@ -51,6 +51,17 @@ export default function Jobs() {
     setJobs((prev) => prev.filter((j) => j.id !== id));
   };
 
+  const toggleFavorite = async (job) => {
+    // optimistic update
+    setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, isFavorite: !j.isFavorite } : j)));
+    try {
+      await api.put(`/jobs/${job.id}`, { isFavorite: !job.isFavorite });
+    } catch {
+      // revert on failure
+      setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, isFavorite: job.isFavorite } : j)));
+    }
+  };
+
   const openAdd = () => { setEditing(null); setModalOpen(true); };
   const openEdit = (job) => { setEditing(job); setModalOpen(true); };
 
@@ -111,11 +122,21 @@ export default function Jobs() {
               <div key={job.id}
                 className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <Link to={`/jobs/${job.id}`} className="text-lg font-semibold text-slate-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400">
-                      {job.title}
-                    </Link>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{job.company}</p>
+                  <div className="flex items-start gap-2">
+                    <button
+                      onClick={() => toggleFavorite(job)}
+                      aria-label={job.isFavorite ? 'Unfavorite' : 'Favorite'}
+                      title={job.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                      className={`mt-1 text-lg leading-none ${job.isFavorite ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400 dark:text-slate-600'}`}
+                    >
+                      {job.isFavorite ? '★' : '☆'}
+                    </button>
+                    <div>
+                      <Link to={`/jobs/${job.id}`} className="text-lg font-semibold text-slate-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400">
+                        {job.title}
+                      </Link>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{job.company}</p>
+                    </div>
                   </div>
                   <StatusBadge status={job.status} />
                 </div>
