@@ -54,6 +54,13 @@ export async function exportPdf(markdown, filename = 'cv') {
   for (const raw of markdown.replace(/\r/g, '').split('\n')) {
     const line = raw.trimEnd();
     if (!line.trim()) { y += 6; continue; }
+    // Markdown table handling: skip separator rows, flatten content rows to readable text
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      if (/^[\s|:-]+$/.test(line)) continue; // separator row like |---|---|
+      const cells = line.split('|').map((c) => stripBold(c.trim())).filter(Boolean);
+      write(cells.join('  —  '), { gapAfter: 1 });
+      continue;
+    }
     if (/^###\s+/.test(line)) { write(stripBold(line.replace(/^###\s+/, '')), { size: 12, style: 'bold', gapAfter: 3 }); }
     else if (/^##\s+/.test(line)) { write(stripBold(line.replace(/^##\s+/, '')), { size: 14, style: 'bold', gapAfter: 4 }); }
     else if (/^#\s+/.test(line)) { write(stripBold(line.replace(/^#\s+/, '')), { size: 18, style: 'bold', gapAfter: 6 }); }

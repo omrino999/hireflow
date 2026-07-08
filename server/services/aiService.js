@@ -48,8 +48,8 @@ function generateCv(description) {
   return textCall(
     `Write a clean, professional CV based on this self-description. ` +
       `Format it as plain Markdown with clear section headings ` +
-      `(Summary, Skills, Experience, Education). ` +
-      `Do NOT return JSON and do NOT wrap the output in code fences. ` +
+      `(Summary, Skills, Experience, Education) and bullet lists. ` +
+      `Do NOT use Markdown tables, do NOT return JSON, and do NOT wrap the output in code fences. ` +
       `Only use information provided; do not invent details.\n\n${description}`,
     2000
   );
@@ -110,7 +110,8 @@ function fitAnalysis(cvText, jobDescription) {
 function tailorCv(cvText, jobDescription) {
   return textCall(
     `Rewrite/tailor this CV to better match the job description below. Emphasize ` +
-      `relevant experience and keywords, keep it truthful, and keep it ATS-friendly.\n\n` +
+      `relevant experience and keywords, keep it truthful, and keep it ATS-friendly. ` +
+      `Format as clean Markdown with headings and bullet lists — do NOT use Markdown tables.\n\n` +
       `=== CV ===\n${cvText}\n\n=== JOB DESCRIPTION ===\n${jobDescription}`,
     2000
   );
