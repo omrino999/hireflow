@@ -49,6 +49,7 @@ export default function Navbar() {
               <Link to="/dashboard" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">Dashboard</Link>
               <Link to="/jobs" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">Jobs</Link>
               <Link to="/profile" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">Profile</Link>
+              <Link to="/about" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">About</Link>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <span className="text-slate-500 dark:text-slate-400">{user.name}</span>
               <ThemeToggle />
@@ -61,6 +62,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
+              <Link to="/about" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">About</Link>
               <ThemeToggle />
               <Link to="/login" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">Log in</Link>
               <Link
