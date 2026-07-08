@@ -7,6 +7,7 @@ import {
 import api from '../api/axios';
 import { useTheme } from '../context/ThemeContext';
 import StatusBadge, { STATUSES } from '../components/StatusBadge';
+import JobMap from '../components/JobMap';
 
 const card = 'rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800';
 
@@ -156,6 +157,11 @@ export default function Dashboard() {
                   ))}
                 </ul>
               )}
+            </section>
+
+            <section className={`${card} lg:col-span-3`}>
+              <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">🗺️ Job locations</h2>
+              <JobMap jobs={jobs} />
             </section>
 
             <section className={card}>
