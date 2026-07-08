@@ -59,9 +59,15 @@ export default function Profile() {
       const fd = new FormData();
       fd.append('cv', file);
       const res = await api.post('/profile/upload-cv', fd);
-      setProfile((p) => ({ ...(p || {}), cvText: res.data.cvText }));
+      // new CV → clear stale career paths locally (backend already cleared them)
+      setProfile((p) => ({ ...(p || {}), cvText: res.data.cvText, careerPaths: null }));
       flash(`CV uploaded (${res.data.length} characters)`);
-    } catch (err) { fail(err, 'Upload failed'); } finally { setBusy(''); if (fileRef.current) fileRef.current.value = ''; }
+      if (fileRef.current) fileRef.current.value = '';
+      setBusy('');
+      await findPaths(); // auto-refresh career paths for the new CV
+      return;
+    } catch (err) { fail(err, 'Upload failed'); }
+    setBusy(''); if (fileRef.current) fileRef.current.value = '';
   };
 
   const removeCv = async () => {
@@ -69,7 +75,8 @@ export default function Profile() {
     setBusy('removeCv'); setError('');
     try {
       await api.put('/profile', { cvText: null });
-      setProfile((p) => ({ ...(p || {}), cvText: null }));
+      // removing the CV also invalidates the career paths derived from it
+      setProfile((p) => ({ ...(p || {}), cvText: null, careerPaths: null }));
       flash('Uploaded CV removed');
     } catch (err) { fail(err, 'Could not remove'); } finally { setBusy(''); }
   };
@@ -88,10 +95,14 @@ export default function Profile() {
     setBusy('pasteSave'); setError('');
     try {
       const res = await api.put('/profile', { cvText: pasteText });
-      setProfile((p) => ({ ...(p || {}), cvText: res.data.cvText }));
+      setProfile((p) => ({ ...(p || {}), cvText: res.data.cvText, careerPaths: null }));
       setPasteOpen(false); setPasteText('');
       flash('CV text saved');
-    } catch (err) { fail(err, 'Could not save'); } finally { setBusy(''); }
+      setBusy('');
+      await findPaths(); // auto-refresh career paths for the new CV
+      return;
+    } catch (err) { fail(err, 'Could not save'); }
+    setBusy('');
   };
 
   const onDrop = (e) => { e.preventDefault(); setDragOver(false); uploadFile(e.dataTransfer.files?.[0]); };

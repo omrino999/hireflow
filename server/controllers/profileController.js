@@ -27,6 +27,9 @@ const getProfile = async (req, res, next) => {
 const upsertProfile = async (req, res, next) => {
   try {
     const data = pickAllowed(req.body);
+    // Changing the CV/description makes the stored career paths stale — invalidate them
+    if ('cvText' in data || 'rawDescription' in data) data.careerPaths = null;
+
     let profile = await Profile.findOne({ where: { userId: req.user.id } });
 
     if (profile) {
@@ -81,7 +84,8 @@ const uploadCv = async (req, res, next) => {
 
     let profile = await Profile.findOne({ where: { userId: req.user.id } });
     if (profile) {
-      await profile.update({ cvText: text });
+      // new CV → old career paths are stale, invalidate them
+      await profile.update({ cvText: text, careerPaths: null });
     } else {
       profile = await Profile.create({ userId: req.user.id, cvText: text });
     }
