@@ -10,6 +10,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState([]); // empty = show all
+  const [favOnly, setFavOnly] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [interviewJob, setInterviewJob] = useState(null);
@@ -69,7 +70,8 @@ export default function Jobs() {
   const toggleFilter = (s) =>
     setFilters((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
-  const visible = filters.length === 0 ? jobs : jobs.filter((j) => filters.includes(j.status));
+  let visible = filters.length === 0 ? jobs : jobs.filter((j) => filters.includes(j.status));
+  if (favOnly) visible = visible.filter((j) => j.isFavorite);
 
   const daysSince = (date) =>
     date ? Math.floor((Date.now() - new Date(date)) / 86400000) : null;
@@ -108,6 +110,15 @@ export default function Jobs() {
             {s} ({jobs.filter((j) => j.status === s).length})
           </button>
         ))}
+        <span className="mx-1 text-slate-300 dark:text-slate-600">|</span>
+        <button onClick={() => setFavOnly((v) => !v)}
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            favOnly
+              ? 'bg-amber-400 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+          }`}>
+          ★ Favorites ({jobs.filter((j) => j.isFavorite).length})
+        </button>
       </div>
 
       {visible.length === 0 ? (
