@@ -60,6 +60,15 @@ const JobApplication = sequelize.define('JobApplication', {
     allowNull: false,
     defaultValue: false,
   },
+  salary: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: { min: { args: [0], msg: 'Salary must be 0 or more' } },
+  },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   // --- AI result fields (written by the AI layer only, never the client) ---
   fitScore: {
     type: DataTypes.INTEGER, // 0-100 match score (own column so we can sort by it)

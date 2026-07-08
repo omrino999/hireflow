@@ -11,6 +11,7 @@ export default function Jobs() {
   const [error, setError] = useState('');
   const [filters, setFilters] = useState([]); // empty = show all
   const [favOnly, setFavOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('newest');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [interviewJob, setInterviewJob] = useState(null);
@@ -73,6 +74,16 @@ export default function Jobs() {
   let visible = filters.length === 0 ? jobs : jobs.filter((j) => filters.includes(j.status));
   if (favOnly) visible = visible.filter((j) => j.isFavorite);
 
+  visible = [...visible].sort((a, b) => {
+    switch (sortBy) {
+      case 'salary': return (b.salary || 0) - (a.salary || 0);
+      case 'applied': return (b.appliedAt || '').localeCompare(a.appliedAt || '');
+      case 'company': return a.company.localeCompare(b.company);
+      case 'location': return (a.location || '').localeCompare(b.location || '');
+      default: return new Date(b.createdAt) - new Date(a.createdAt); // newest
+    }
+  });
+
   const daysSince = (date) =>
     date ? Math.floor((Date.now() - new Date(date)) / 86400000) : null;
 
@@ -80,12 +91,22 @@ export default function Jobs() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Applications</h1>
-        <button onClick={openAdd}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-          + Add job
-        </button>
+        <div className="flex items-center gap-2">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700 outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+            <option value="newest">Sort: Newest</option>
+            <option value="salary">Sort: Salary (high→low)</option>
+            <option value="applied">Sort: Applied (recent)</option>
+            <option value="company">Sort: Company (A–Z)</option>
+            <option value="location">Sort: Location (A–Z)</option>
+          </select>
+          <button onClick={openAdd}
+            className="whitespace-nowrap rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            + Add job
+          </button>
+        </div>
       </div>
 
       {error && <div className="mb-4 rounded-md bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{error}</div>}
@@ -153,6 +174,8 @@ export default function Jobs() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-400">
+                  {job.location && <span>📍 {job.location}</span>}
+                  {job.salary != null && <span>💰 {job.salary.toLocaleString()}</span>}
                   {job.appliedAt && <span>Applied {daysSince(job.appliedAt)}d ago</span>}
                   {job.interviewAt && <span className="text-amber-500">Interview: {job.interviewAt}</span>}
                   {job.fitScore != null && <span className="font-medium text-indigo-500">Fit {job.fitScore}/100</span>}

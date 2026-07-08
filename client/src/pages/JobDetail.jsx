@@ -114,6 +114,8 @@ export default function JobDetail() {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+          {job.location && <span>📍 {job.location}</span>}
+          {job.salary != null && <span>💰 {job.salary.toLocaleString()} <span className="text-xs text-slate-400">/mo</span></span>}
           {job.appliedAt && <span>Applied: {job.appliedAt}</span>}
           {job.interviewAt && <span className="text-amber-500">Interview: {job.interviewAt}</span>}
           {job.jobUrl && <a href={job.jobUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline dark:text-indigo-400">View posting ↗</a>}

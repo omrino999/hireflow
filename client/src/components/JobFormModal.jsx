@@ -10,6 +10,8 @@ export default function JobFormModal({ job, onClose, onSave }) {
     company: job?.company || '',
     title: job?.title || '',
     jobUrl: job?.jobUrl || '',
+    location: job?.location || '',
+    salary: job?.salary ?? '',
     description: job?.description || '',
     status: job?.status || 'saved',
     appliedAt: job?.appliedAt || '',
@@ -43,6 +45,8 @@ export default function JobFormModal({ job, onClose, onSave }) {
         company: form.company,
         title: form.title,
         jobUrl: form.jobUrl,
+        location: form.location || null,
+        salary: form.salary === '' ? null : Number(form.salary),
         description: form.description,
         status: form.status,
         notes: form.notes,
@@ -90,6 +94,17 @@ export default function JobFormModal({ job, onClose, onSave }) {
           <div>
             <label className={label}>Job URL</label>
             <input name="jobUrl" value={form.jobUrl} onChange={onChange} placeholder="https://…" className={input} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={label}>Location</label>
+              <input name="location" value={form.location} onChange={onChange} placeholder="e.g. Tel Aviv / Remote" className={input} />
+            </div>
+            <div>
+              <label className={label}>Salary <span className="font-normal text-slate-400">(monthly, your currency)</span></label>
+              <input type="number" min="0" name="salary" value={form.salary} onChange={onChange} placeholder="e.g. 15000" className={input} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

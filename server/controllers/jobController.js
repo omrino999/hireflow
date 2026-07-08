@@ -12,6 +12,8 @@ const ALLOWED_FIELDS = [
   'interviewAt',
   'notes',
   'isFavorite',
+  'salary',
+  'location',
 ];
 
 const pickAllowed = (body) => {
