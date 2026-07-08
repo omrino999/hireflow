@@ -25,6 +25,7 @@ export default function Profile() {
   const [dragOver, setDragOver] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
+  const [cvExpanded, setCvExpanded] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
@@ -192,6 +193,8 @@ export default function Profile() {
           <input ref={fileRef} type="file" accept=".pdf,.docx" onChange={(e) => uploadFile(e.target.files?.[0])} className="hidden" />
         </div>
 
+        {busy === 'upload' && <AiLoader label="Reading your CV (designed PDFs take a little longer)" />}
+
         {/* Manual fallback for PDFs that don't extract well (image-based / heavily designed) */}
         <button onClick={() => setPasteOpen((v) => !v)} className="mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400">
           {pasteOpen ? 'Cancel' : '📝 Or paste CV text instead'}
@@ -213,16 +216,25 @@ export default function Profile() {
         )}
 
         {profile?.cvText && (
-          <details className="mt-4 rounded-md border border-slate-200 p-3 dark:border-slate-700">
-            <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">Uploaded CV text</summary>
-            <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-400">{profile.cvText}</pre>
-            <div className="mt-2 flex items-center gap-3 text-xs">
-              <span className="text-slate-400">Re-upload above to replace, or</span>
-              <button onClick={removeCv} disabled={busy === 'removeCv'} className="font-medium text-red-500 hover:underline">
-                {busy === 'removeCv' ? 'Removing…' : 'Remove CV'}
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                📄 Your CV <span className="font-normal text-xs text-slate-400">· {profile.cvText.length.toLocaleString()} chars</span>
+              </span>
+              <button onClick={removeCv} disabled={busy === 'removeCv'} className="text-xs font-medium text-red-500 hover:underline">
+                {busy === 'removeCv' ? 'Removing…' : 'Remove'}
               </button>
             </div>
-          </details>
+            <p className={`whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300 ${cvExpanded ? 'max-h-96 overflow-y-auto' : 'line-clamp-[8]'}`}>
+              {profile.cvText}
+            </p>
+            <div className="mt-2 flex items-center gap-3 text-xs">
+              <button onClick={() => setCvExpanded((v) => !v)} className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+                {cvExpanded ? 'Show less' : 'Show more'}
+              </button>
+              <span className="text-slate-400">Re-upload above to replace</span>
+            </div>
+          </div>
         )}
 
         {profile?.generatedCv && (
