@@ -166,6 +166,32 @@ function improveCv(cvText, mode = 'detailed') {
   );
 }
 
+// 7. Vision fallback: read an image-based/designed PDF that has no text layer.
+// Sends the PDF to Claude, which reads the rendered pages and returns the text.
+async function extractCvFromPdf(buffer) {
+  const base64 = buffer.toString('base64');
+  const msg = await client.messages.create({
+    model: MODEL,
+    max_tokens: 8000,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+          {
+            type: 'text',
+            text:
+              'This is a CV/resume. Extract ALL of its text content as clean plain text, ' +
+              'preserving the structure (name, contact, summary, experience, education, skills). ' +
+              'Output only the CV text — no commentary, no preamble.',
+          },
+        ],
+      },
+    ],
+  });
+  return extractText(msg);
+}
+
 module.exports = {
   generateCv,
   careerPaths,
@@ -173,4 +199,5 @@ module.exports = {
   tailorCv,
   interviewPrep,
   improveCv,
+  extractCvFromPdf,
 };

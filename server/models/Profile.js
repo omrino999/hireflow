@@ -20,7 +20,7 @@ const Profile = sequelize.define('Profile', {
   cvText: {
     type: DataTypes.TEXT,
     allowNull: true, // uploaded existing CV, or the chosen working CV
-    validate: { len: { args: [0, 20000], msg: 'CV too long (max 20000 characters)' } },
+    validate: { len: { args: [0, 50000], msg: 'CV too long (max 50000 characters)' } },
   },
   generatedCv: {
     type: DataTypes.TEXT,

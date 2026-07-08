@@ -1,5 +1,6 @@
 const { Profile } = require('../models');
-const { extractText } = require('../services/cvParser');
+const { extractText, PDF } = require('../services/cvParser');
+const ai = require('../services/aiService');
 
 // Only these fields can be set from the request body.
 // AI-generated fields (generatedCv, careerPaths) are written by the AI layer, not the client.
@@ -72,12 +73,22 @@ const uploadCv = async (req, res, next) => {
     }
 
     text = (text || '').trim();
-    // Very little text usually means an image-based/scanned or heavily-designed PDF
-    // whose text layer didn't extract — tell the user instead of saving garbage.
+    // Very little text usually means an image-based/designed PDF with no text layer.
+    // Fall back to Claude vision — it reads the rendered pages and extracts the text.
+    if (text.length < 80) {
+      const isPdf = req.file.mimetype === PDF || /\.pdf$/i.test(req.file.originalname || '');
+      if (isPdf) {
+        try {
+          text = (await ai.extractCvFromPdf(req.file.buffer) || '').trim();
+        } catch (err) {
+          console.error('[vision CV extraction failed]', err.message);
+        }
+      }
+    }
     if (text.length < 80) {
       return res.status(422).json({
         error:
-          'We could only read a little text from this file — it may be image-based or heavily designed. ' +
+          'We could not read this file — it may be image-based or heavily designed. ' +
           'Try a text-based PDF/DOCX, or paste your CV text manually.',
       });
     }
