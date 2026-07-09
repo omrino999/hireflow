@@ -8,8 +8,16 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useTheme } from '../context/ThemeContext';
 
-// Fix Leaflet's default marker icons under a bundler (Vite)
-L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
+// Leaflet's default marker icon breaks under bundlers — define an explicit icon instead
+const defaultIcon = new L.Icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 // Geocode a location string via free Nominatim, cached in localStorage to respect rate limits
 async function geocode(location) {
@@ -79,7 +87,7 @@ export default function JobMap({ jobs }) {
         <MapContainer center={[32.0853, 34.7818]} zoom={7} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
           <TileLayer key={theme} url={tileUrl} attribution='&copy; OpenStreetMap contributors' />
           {markers.map((m) => (
-            <Marker key={m.id} position={[m.lat, m.lng]}>
+            <Marker key={m.id} position={[m.lat, m.lng]} icon={defaultIcon}>
               <Popup>
                 <Link to={`/jobs/${m.id}`} className="font-medium">{m.title}</Link>
                 <br />{m.company}
