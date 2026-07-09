@@ -4,6 +4,7 @@ import api from '../api/axios';
 import StatusBadge, { STATUSES } from '../components/StatusBadge';
 import JobFormModal from '../components/JobFormModal';
 import InterviewModal from '../components/InterviewModal';
+import { formatLocation } from '../utils/location';
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -79,7 +80,7 @@ export default function Jobs() {
       case 'salary': return (b.salary || 0) - (a.salary || 0);
       case 'applied': return (b.appliedAt || '').localeCompare(a.appliedAt || '');
       case 'company': return a.company.localeCompare(b.company);
-      case 'location': return (a.location || '').localeCompare(b.location || '');
+      case 'location': return (a.city || '').localeCompare(b.city || '');
       default: return new Date(b.createdAt) - new Date(a.createdAt); // newest
     }
   });
@@ -174,7 +175,7 @@ export default function Jobs() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-400">
-                  {job.location && <span>📍 {job.location}</span>}
+                  {formatLocation(job) && <span>📍 {formatLocation(job)}</span>}
                   {job.salary != null && <span>💰 {job.salary.toLocaleString()}</span>}
                   {job.appliedAt && <span>Applied {daysSince(job.appliedAt)}d ago</span>}
                   {job.interviewAt && <span className="text-amber-500">Interview: {job.interviewAt}</span>}

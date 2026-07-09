@@ -7,6 +7,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useTheme } from '../context/ThemeContext';
+import { formatLocation } from '../utils/location';
 
 // Leaflet's default marker icon breaks under bundlers — define an explicit icon instead
 const defaultIcon = new L.Icon({
@@ -63,10 +64,10 @@ export default function JobMap({ jobs, userLocation }) {
   const [markers, setMarkers] = useState([]);
   const [userPoint, setUserPoint] = useState(null);
   const [loading, setLoading] = useState(false);
-  const withLoc = jobs.filter((j) => j.location);
+  const withLoc = jobs.map((j) => ({ ...j, loc: formatLocation(j) })).filter((j) => j.loc);
 
   // re-geocode when the set of (job → location) pairs, or the user's location, changes
-  const sig = withLoc.map((j) => j.id + j.location).join('|') + '::' + (userLocation || '');
+  const sig = withLoc.map((j) => j.id + j.loc).join('|') + '::' + (userLocation || '');
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -79,7 +80,7 @@ export default function JobMap({ jobs, userLocation }) {
       }
       const results = [];
       for (const j of withLoc) {
-        const coord = await geocode(j.location);
+        const coord = await geocode(j.loc);
         if (cancelled) return;
         if (coord) { results.push({ ...j, ...coord }); setMarkers([...results]); }
       }
@@ -108,7 +109,7 @@ export default function JobMap({ jobs, userLocation }) {
               <Popup>
                 <Link to={`/jobs/${m.id}`} className="font-medium">{m.title}</Link>
                 <br />{m.company}
-                <br /><span className="text-slate-500">{m.location}</span>
+                <br /><span className="text-slate-500">{m.loc}</span>
               </Popup>
             </Marker>
           ))}

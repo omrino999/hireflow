@@ -13,7 +13,9 @@ const ALLOWED_FIELDS = [
   'notes',
   'isFavorite',
   'salary',
-  'location',
+  'street',
+  'city',
+  'country',
 ];
 
 const pickAllowed = (body) => {

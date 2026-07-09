@@ -6,6 +6,7 @@ import JobFormModal from '../components/JobFormModal';
 import InterviewModal from '../components/InterviewModal';
 import AiLoader from '../components/AiLoader';
 import CvDocument from '../components/CvDocument';
+import { formatLocation } from '../utils/location';
 
 const card = 'rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800';
 const btn = 'rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50';
@@ -114,7 +115,7 @@ export default function JobDetail() {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-          {job.location && <span>📍 {job.location}</span>}
+          {formatLocation(job) && <span>📍 {formatLocation(job)}</span>}
           {job.salary != null && <span>💰 {job.salary.toLocaleString()} <span className="text-xs text-slate-400">/mo</span></span>}
           {job.appliedAt && <span>Applied: {job.appliedAt}</span>}
           {job.interviewAt && <span className="text-amber-500">Interview: {job.interviewAt}</span>}

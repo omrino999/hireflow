@@ -8,6 +8,7 @@ import api from '../api/axios';
 import { useTheme } from '../context/ThemeContext';
 import StatusBadge, { STATUSES } from '../components/StatusBadge';
 import JobMap from '../components/JobMap';
+import { formatLocation } from '../utils/location';
 
 const card = 'rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800';
 
@@ -32,7 +33,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     api.get('/jobs').then((res) => setJobs(res.data)).catch(() => {}).finally(() => setLoading(false));
-    api.get('/profile').then((res) => setUserLocation(res.data?.location || '')).catch(() => {});
+    api.get('/profile').then((res) => setUserLocation(formatLocation(res.data || {}))).catch(() => {});
   }, []);
 
   if (loading) return <div className="text-slate-400">Loading dashboard…</div>;

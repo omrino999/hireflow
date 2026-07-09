@@ -10,7 +10,9 @@ export default function JobFormModal({ job, onClose, onSave }) {
     company: job?.company || '',
     title: job?.title || '',
     jobUrl: job?.jobUrl || '',
-    location: job?.location || '',
+    city: job?.city || '',
+    country: job?.country || '',
+    street: job?.street || '',
     salary: job?.salary ?? '',
     description: job?.description || '',
     status: job?.status || 'saved',
@@ -45,7 +47,9 @@ export default function JobFormModal({ job, onClose, onSave }) {
         company: form.company,
         title: form.title,
         jobUrl: form.jobUrl,
-        location: form.location || null,
+        city: form.city || null,
+        country: form.country || null,
+        street: form.street || null,
         salary: form.salary === '' ? null : Number(form.salary),
         description: form.description,
         status: form.status,
@@ -98,11 +102,21 @@ export default function JobFormModal({ job, onClose, onSave }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={label}>Location</label>
-              <input name="location" value={form.location} onChange={onChange} placeholder="e.g. Tel Aviv / Remote" className={input} />
+              <label className={label}>City</label>
+              <input name="city" value={form.city} onChange={onChange} placeholder="e.g. Tel Aviv" className={input} />
             </div>
             <div>
-              <label className={label}>Salary <span className="font-normal text-slate-400">(monthly, your currency)</span></label>
+              <label className={label}>Country</label>
+              <input name="country" value={form.country} onChange={onChange} placeholder="e.g. Israel" className={input} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={label}>Street <span className="font-normal text-slate-400">(optional)</span></label>
+              <input name="street" value={form.street} onChange={onChange} placeholder="e.g. Rothschild Blvd" className={input} />
+            </div>
+            <div>
+              <label className={label}>Salary <span className="font-normal text-slate-400">(monthly)</span></label>
               <input type="number" min="0" name="salary" value={form.salary} onChange={onChange} placeholder="e.g. 15000" className={input} />
             </div>
           </div>

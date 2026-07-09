@@ -30,10 +30,10 @@ const Profile = sequelize.define('Profile', {
     type: DataTypes.JSON,
     allowNull: true, // AI career-path analysis result
   },
-  location: {
-    type: DataTypes.STRING,
-    allowNull: true, // user's home/base location, for the job map
-  },
+  // user's home/base location (structured), for the job map
+  street: { type: DataTypes.STRING, allowNull: true },
+  city: { type: DataTypes.STRING, allowNull: true },
+  country: { type: DataTypes.STRING, allowNull: true },
 });
 
 module.exports = Profile;

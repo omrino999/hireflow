@@ -4,7 +4,7 @@ const ai = require('../services/aiService');
 
 // Only these fields can be set from the request body.
 // AI-generated fields (generatedCv, careerPaths) are written by the AI layer, not the client.
-const ALLOWED_FIELDS = ['rawDescription', 'cvText', 'location'];
+const ALLOWED_FIELDS = ['rawDescription', 'cvText', 'street', 'city', 'country'];
 
 const pickAllowed = (body) => {
   const data = {};

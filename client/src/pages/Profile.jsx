@@ -17,7 +17,7 @@ const btnOutline = 'rounded-md border border-slate-300 px-4 py-2 text-sm font-me
 export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [loc, setLoc] = useState({ street: '', city: '', country: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
@@ -34,7 +34,7 @@ export default function Profile() {
       const res = await api.get('/profile');
       setProfile(res.data);
       setDescription(res.data?.rawDescription || '');
-      setLocation(res.data?.location || '');
+      setLoc({ street: res.data?.street || '', city: res.data?.city || '', country: res.data?.country || '' });
     } catch {
       setError('Could not load profile');
     } finally {
@@ -58,10 +58,38 @@ export default function Profile() {
   const saveLocation = async () => {
     setBusy('loc'); setError('');
     try {
-      const res = await api.put('/profile', { location });
+      const res = await api.put('/profile', loc);
       setProfile(res.data);
       flash('Location saved');
     } catch (err) { fail(err, 'Could not save'); } finally { setBusy(''); }
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) { setError('Geolocation is not supported by your browser'); return; }
+    setBusy('geoloc'); setError('');
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await res.json();
+          const a = data.address || {};
+          setLoc({
+            street: a.road || '',
+            city: a.city || a.town || a.village || a.municipality || '',
+            country: a.country || '',
+          });
+          flash('Location detected — review and Save');
+        } catch {
+          setError('Could not look up your address');
+        } finally {
+          setBusy('');
+        }
+      },
+      () => { setError('Could not get your location (permission denied?)'); setBusy(''); }
+    );
   };
 
   const uploadFile = async (file) => {
@@ -181,14 +209,25 @@ export default function Profile() {
         {busy === 'gen' && <AiLoader label="Writing your CV" />}
 
         <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            📍 Your location <span className="font-normal text-slate-400">— pins you on the job map to gauge proximity</span>
-          </label>
-          <div className="flex gap-2">
-            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Tel Aviv"
-              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              📍 Your location <span className="font-normal text-slate-400">— pins you on the job map to gauge proximity</span>
+            </label>
+            <button onClick={useCurrentLocation} disabled={busy === 'geoloc'} className="text-xs font-medium text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-400">
+              {busy === 'geoloc' ? 'Detecting…' : '📡 Use current location'}
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <input value={loc.city} onChange={(e) => setLoc({ ...loc, city: e.target.value })} placeholder="City"
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+            <input value={loc.country} onChange={(e) => setLoc({ ...loc, country: e.target.value })} placeholder="Country"
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+            <input value={loc.street} onChange={(e) => setLoc({ ...loc, street: e.target.value })} placeholder="Street (optional)"
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+          </div>
+          <div className="mt-2 flex justify-end">
             <button onClick={saveLocation} disabled={busy === 'loc'} className={btnOutline}>
-              {busy === 'loc' ? 'Saving…' : 'Save'}
+              {busy === 'loc' ? 'Saving…' : 'Save location'}
             </button>
           </div>
         </div>
