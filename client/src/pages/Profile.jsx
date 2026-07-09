@@ -172,6 +172,11 @@ export default function Profile() {
   };
 
   const generateCv = () => runAI('gen', async () => {
+    // make sure the current description is saved so generation uses it (no separate Save needed)
+    if (description !== (profile?.rawDescription || '')) {
+      const saved = await api.put('/profile', { rawDescription: description });
+      setProfile(saved.data);
+    }
     const res = await api.post('/ai/generate-cv');
     setProfile((p) => ({ ...(p || {}), generatedCv: res.data.generatedCv }));
     flash('CV generated');
@@ -227,8 +232,8 @@ export default function Profile() {
             <button onClick={saveDescription} disabled={busy === 'desc'} className={btnOutline}>
               {busy === 'desc' ? 'Saving…' : 'Save'}
             </button>
-            <button onClick={generateCv} disabled={!!busy || !profile?.rawDescription} className={btn}
-              title={!profile?.rawDescription ? 'Save a description first' : ''}>
+            <button onClick={generateCv} disabled={!!busy || !description.trim()} className={btn}
+              title={!description.trim() ? 'Write a description first' : ''}>
               ✨ Generate CV
             </button>
           </div>
