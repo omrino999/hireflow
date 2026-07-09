@@ -1,6 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Landing() {
+  const { user, loading } = useAuth();
+  // logged-in users shouldn't see the guest landing page
+  if (!loading && user) return <Navigate to="/dashboard" replace />;
+
   return (
     <div className="mx-auto max-w-2xl py-16 text-center">
       <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white">

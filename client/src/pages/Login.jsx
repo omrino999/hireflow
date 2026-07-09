@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -24,6 +24,8 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  if (!loading && user) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="mx-auto max-w-sm">
