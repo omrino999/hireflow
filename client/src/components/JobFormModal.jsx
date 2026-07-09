@@ -149,8 +149,9 @@ export default function JobFormModal({ job, onClose, onSave }) {
           </div>
 
           <div>
-            <label className={label}>Notes</label>
-            <textarea name="notes" value={form.notes} onChange={onChange} rows={2} className={input} />
+            <label className={label}>Personal notes</label>
+            <textarea name="notes" value={form.notes} onChange={onChange} rows={2}
+              placeholder="Your own notes & takeaways for this job (separate from the job description above)" className={input} />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

@@ -20,7 +20,7 @@ const STACK = {
 };
 
 const ROADMAP = [
-  ['🗺️ Job map', 'Pin jobs by location to weigh commute/proximity.'],
+  ['🎨 Designed CV templates', 'Polished, professionally-styled CV layouts — beyond plain text.'],
   ['📄 CV version library', 'Keep multiple named CV versions.'],
   ['🔗 Import from URL', 'Best-effort job import from a posting link via AI.'],
   ['✉️ Follow-up reminders', 'Email nudges so no application goes stale.'],

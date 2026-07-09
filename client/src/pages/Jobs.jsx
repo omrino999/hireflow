@@ -132,7 +132,6 @@ export default function Jobs() {
             {s} ({jobs.filter((j) => j.status === s).length})
           </button>
         ))}
-        <span className="mx-1 text-slate-300 dark:text-slate-600">|</span>
         <button onClick={() => setFavOnly((v) => !v)}
           className={`rounded-full px-3 py-1 text-sm font-medium ${
             favOnly

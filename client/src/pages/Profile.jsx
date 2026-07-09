@@ -43,7 +43,7 @@ export default function Profile() {
   };
   useEffect(() => { load(); }, []);
 
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 2500); };
+  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 5000); };
   const fail = (err, fallback) => setError(err.response?.data?.error || fallback);
 
   const saveDescription = async () => {
@@ -131,6 +131,23 @@ export default function Profile() {
     } catch (err) { fail(err, 'Could not delete'); } finally { setBusy(''); }
   };
 
+  // Promote the generated draft to the active CV (cvText) used for fit/tailor/career
+  const adoptGeneratedCv = async () => {
+    if (profile?.cvText && !confirm('This will replace your current CV with the generated one. Continue?')) return;
+    setBusy('adopt'); setError('');
+    try {
+      const generated = profile.generatedCv;
+      await api.put('/profile', { cvText: generated });
+      await api.delete('/profile/generated-cv');
+      setProfile((p) => ({ ...(p || {}), cvText: generated, generatedCv: null, careerPaths: null }));
+      flash('Saved as your CV');
+      setBusy('');
+      await findPaths(); // refresh career paths for the new CV
+      return;
+    } catch (err) { fail(err, 'Could not save'); }
+    setBusy('');
+  };
+
   const saveCvText = async () => {
     setBusy('pasteSave'); setError('');
     try {
@@ -180,8 +197,18 @@ export default function Profile() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Your Profile</h1>
 
-      {error && <div className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{error}</div>}
-      {msg && <div className="rounded-md bg-green-50 px-4 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">{msg}</div>}
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-md bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <span>{error}</span>
+          <button onClick={() => setError('')} aria-label="Dismiss" className="text-lg leading-none hover:opacity-70">×</button>
+        </div>
+      )}
+      {msg && (
+        <div className="flex items-center justify-between gap-3 rounded-md bg-green-50 px-4 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
+          <span>{msg}</span>
+          <button onClick={() => setMsg('')} aria-label="Dismiss" className="text-lg leading-none hover:opacity-70">×</button>
+        </div>
+      )}
 
       {/* ── About you ── */}
       <section className={card}>
@@ -200,7 +227,7 @@ export default function Profile() {
             <button onClick={saveDescription} disabled={busy === 'desc'} className={btnOutline}>
               {busy === 'desc' ? 'Saving…' : 'Save'}
             </button>
-            <button onClick={generateCv} disabled={busy === 'gen' || !profile?.rawDescription} className={btn}
+            <button onClick={generateCv} disabled={!!busy || !profile?.rawDescription} className={btn}
               title={!profile?.rawDescription ? 'Save a description first' : ''}>
               ✨ Generate CV
             </button>
@@ -302,22 +329,31 @@ export default function Profile() {
 
         {profile?.generatedCv && (
           <details open className="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-700">
-            <summary className="cursor-pointer text-sm font-semibold text-indigo-600 dark:text-indigo-400">AI-generated CV (click to collapse)</summary>
+            <summary className="cursor-pointer text-sm font-semibold text-indigo-600 dark:text-indigo-400">✨ Generated CV — draft (click to collapse)</summary>
             <div className="mt-3">
               <CvDocument markdown={profile.generatedCv} filename="my-cv" />
             </div>
-            <button onClick={deleteGeneratedCv} disabled={busy === 'delGen'}
-              className="mt-3 text-xs font-medium text-red-500 hover:underline">
-              {busy === 'delGen' ? 'Deleting…' : 'Delete generated CV'}
-            </button>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button onClick={adoptGeneratedCv} disabled={busy === 'adopt'}
+                className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
+                {busy === 'adopt' ? 'Saving…' : '✓ Use as my CV'}
+              </button>
+              <button onClick={deleteGeneratedCv} disabled={busy === 'delGen'}
+                className="text-xs font-medium text-red-500 hover:underline">
+                {busy === 'delGen' ? 'Deleting…' : 'Discard'}
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              “Use as my CV” makes this your active CV — used for fit analysis, tailoring &amp; career paths.
+            </p>
           </details>
         )}
 
         {/* Improve actions */}
         {hasCv && (
           <div className="mt-4 flex flex-wrap gap-3">
-            <button onClick={() => improveCv('quick')} disabled={busy.startsWith('improve')} className={btnOutline}>⚡ Quick tips</button>
-            <button onClick={() => improveCv('detailed')} disabled={busy.startsWith('improve')} className={btnOutline}>🔍 Detailed review</button>
+            <button onClick={() => improveCv('quick')} disabled={!!busy} className={btnOutline}>⚡ Quick tips</button>
+            <button onClick={() => improveCv('detailed')} disabled={!!busy} className={btnOutline}>🔍 Detailed review</button>
           </div>
         )}
         {busy.startsWith('improve') && <AiLoader label="Reviewing your CV" />}
@@ -334,7 +370,7 @@ export default function Profile() {
         <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
           <div className="mb-1 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900 dark:text-white">Career paths</h3>
-            <button onClick={findPaths} disabled={busy === 'paths' || !hasInput} className={btn}
+            <button onClick={findPaths} disabled={!!busy || !hasInput} className={btn}
               title={!hasInput ? 'Add a description or CV first' : ''}>
               {busy === 'paths' ? 'Finding…' : paths ? 'Refresh' : 'Find my paths'}
             </button>

@@ -24,6 +24,7 @@ export default function JobDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
+  const [hasCv, setHasCv] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [interviewOpen, setInterviewOpen] = useState(false);
 
@@ -37,7 +38,10 @@ export default function JobDetail() {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+    api.get('/profile').then((r) => setHasCv(!!(r.data?.cvText || r.data?.generatedCv))).catch(() => {});
+  }, [id]);
 
   const fail = (err, fallback) => setError(err.response?.data?.error || fallback);
 
@@ -147,12 +151,19 @@ export default function JobDetail() {
           Add a <strong>job description</strong> (via Edit) to unlock the AI features below.
         </div>
       )}
+      {!hasCv && (
+        <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+          💡 For CV-aware results, add a CV on your <Link to="/profile" className="font-medium underline">Profile</Link>.
+          Fit analysis &amp; CV tailoring need one; interview prep works without a CV but gives better questions with it
+          (you're often asked about your CV, not just the role).
+        </div>
+      )}
 
       {/* AI: Fit analysis */}
       <section className={card}>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">🎯 Fit analysis</h2>
-          <button onClick={runFit} disabled={busy === 'fit' || !hasDescription} className={btn}>
+          <button onClick={runFit} disabled={!!busy || !hasDescription || !hasCv} className={btn}>
             {busy === 'fit' ? 'Analyzing…' : fit ? 'Re-analyze' : 'Analyze fit'}
           </button>
         </div>
@@ -188,7 +199,7 @@ export default function JobDetail() {
       <section className={card}>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">✏️ Tailored CV</h2>
-          <button onClick={runTailor} disabled={busy === 'tailor' || !hasDescription} className={btn}>
+          <button onClick={runTailor} disabled={!!busy || !hasDescription || !hasCv} className={btn}>
             {busy === 'tailor' ? 'Tailoring…' : job.tailoredCv ? 'Re-tailor' : 'Tailor my CV for this job'}
           </button>
         </div>
@@ -204,7 +215,7 @@ export default function JobDetail() {
       <section className={card}>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">🎤 Interview prep</h2>
-          <button onClick={runInterview} disabled={busy === 'interview' || !hasDescription} className={btn}>
+          <button onClick={runInterview} disabled={!!busy || !hasDescription} className={btn}>
             {busy === 'interview' ? 'Generating…' : job.interviewQuestions?.length ? 'Regenerate' : 'Generate questions'}
           </button>
         </div>
