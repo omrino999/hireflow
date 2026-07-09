@@ -4,7 +4,7 @@
 
 Built as a Full Stack + Python final project (John Bryce, 2026).
 
-<!-- Add once deployed: **Live demo:** https://... -->
+**🔗 Live demo:** https://hireflow2.vercel.app
 
 ---
 
