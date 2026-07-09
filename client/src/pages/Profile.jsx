@@ -26,7 +26,6 @@ export default function Profile() {
   const [dragOver, setDragOver] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
-  const [cvExpanded, setCvExpanded] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
@@ -320,15 +319,8 @@ export default function Profile() {
                 {busy === 'removeCv' ? 'Removing…' : 'Remove'}
               </button>
             </div>
-            <p className={`whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300 ${cvExpanded ? 'max-h-96 overflow-y-auto' : 'line-clamp-[8]'}`}>
-              {profile.cvText}
-            </p>
-            <div className="mt-2 flex items-center gap-3 text-xs">
-              <button onClick={() => setCvExpanded((v) => !v)} className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
-                {cvExpanded ? 'Show less' : 'Show more'}
-              </button>
-              <span className="text-slate-400">Re-upload above to replace</span>
-            </div>
+            <CvDocument markdown={profile.cvText} filename="my-cv" />
+            <p className="mt-2 text-xs text-slate-400">Re-upload above to replace.</p>
           </div>
         )}
 
