@@ -17,6 +17,7 @@ const btnOutline = 'rounded-md border border-slate-300 px-4 py-2 text-sm font-me
 export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
@@ -33,6 +34,7 @@ export default function Profile() {
       const res = await api.get('/profile');
       setProfile(res.data);
       setDescription(res.data?.rawDescription || '');
+      setLocation(res.data?.location || '');
     } catch {
       setError('Could not load profile');
     } finally {
@@ -50,6 +52,15 @@ export default function Profile() {
       const res = await api.put('/profile', { rawDescription: description });
       setProfile(res.data);
       flash('Description saved');
+    } catch (err) { fail(err, 'Could not save'); } finally { setBusy(''); }
+  };
+
+  const saveLocation = async () => {
+    setBusy('loc'); setError('');
+    try {
+      const res = await api.put('/profile', { location });
+      setProfile(res.data);
+      flash('Location saved');
     } catch (err) { fail(err, 'Could not save'); } finally { setBusy(''); }
   };
 
@@ -168,6 +179,19 @@ export default function Profile() {
           </div>
         </div>
         {busy === 'gen' && <AiLoader label="Writing your CV" />}
+
+        <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            📍 Your location <span className="font-normal text-slate-400">— pins you on the job map to gauge proximity</span>
+          </label>
+          <div className="flex gap-2">
+            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Tel Aviv"
+              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+            <button onClick={saveLocation} disabled={busy === 'loc'} className={btnOutline}>
+              {busy === 'loc' ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* ── Your CV & career fit ── */}

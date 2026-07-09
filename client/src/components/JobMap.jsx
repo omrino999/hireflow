@@ -19,6 +19,16 @@ const defaultIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+// Distinct green "you are here" marker for the user's own location
+const userIcon = L.divIcon({
+  className: '',
+  html:
+    '<div style="width:18px;height:18px;border-radius:50%;background:#10b981;' +
+    'border:3px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.5)"></div>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
 // Geocode a location string via free Nominatim, cached in localStorage to respect rate limits
 async function geocode(location) {
   const key = 'geo:' + location.trim().toLowerCase();
@@ -48,18 +58,25 @@ function FitBounds({ points }) {
   return null;
 }
 
-export default function JobMap({ jobs }) {
+export default function JobMap({ jobs, userLocation }) {
   const { theme } = useTheme();
   const [markers, setMarkers] = useState([]);
+  const [userPoint, setUserPoint] = useState(null);
   const [loading, setLoading] = useState(false);
   const withLoc = jobs.filter((j) => j.location);
 
-  // re-geocode when the set of (job → location) pairs changes
-  const sig = withLoc.map((j) => j.id + j.location).join('|');
+  // re-geocode when the set of (job → location) pairs, or the user's location, changes
+  const sig = withLoc.map((j) => j.id + j.location).join('|') + '::' + (userLocation || '');
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      if (userLocation) {
+        const uc = await geocode(userLocation);
+        if (!cancelled) setUserPoint(uc);
+      } else {
+        setUserPoint(null);
+      }
       const results = [];
       for (const j of withLoc) {
         const coord = await geocode(j.location);
@@ -72,8 +89,8 @@ export default function JobMap({ jobs }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig]);
 
-  if (withLoc.length === 0) {
-    return <p className="text-sm text-slate-400">Add a location to your jobs to see them on the map.</p>;
+  if (withLoc.length === 0 && !userLocation) {
+    return <p className="text-sm text-slate-400">Add a location to your jobs (or set your own on Profile) to see them on the map.</p>;
   }
 
   const tileUrl = theme === 'dark'
@@ -95,8 +112,17 @@ export default function JobMap({ jobs }) {
               </Popup>
             </Marker>
           ))}
-          <FitBounds points={markers} />
+          {userPoint && (
+            <Marker position={[userPoint.lat, userPoint.lng]} icon={userIcon}>
+              <Popup>📍 You are here<br /><span className="text-slate-500">{userLocation}</span></Popup>
+            </Marker>
+          )}
+          <FitBounds points={[...markers, ...(userPoint ? [userPoint] : [])]} />
         </MapContainer>
+      </div>
+      <div className="mt-2 flex gap-4 text-xs text-slate-400">
+        <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" /> You</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" /> Jobs</span>
       </div>
     </div>
   );

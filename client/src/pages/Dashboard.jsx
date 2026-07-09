@@ -27,10 +27,12 @@ function StatCard({ label, value, accent }) {
 export default function Dashboard() {
   const { theme } = useTheme();
   const [jobs, setJobs] = useState([]);
+  const [userLocation, setUserLocation] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/jobs').then((res) => setJobs(res.data)).catch(() => {}).finally(() => setLoading(false));
+    api.get('/profile').then((res) => setUserLocation(res.data?.location || '')).catch(() => {});
   }, []);
 
   if (loading) return <div className="text-slate-400">Loading dashboard…</div>;
@@ -161,7 +163,7 @@ export default function Dashboard() {
 
             <section className={`${card} lg:col-span-3`}>
               <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">🗺️ Job locations</h2>
-              <JobMap jobs={jobs} />
+              <JobMap jobs={jobs} userLocation={userLocation} />
             </section>
 
             <section className={card}>
