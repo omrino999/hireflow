@@ -3,7 +3,7 @@ import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
-  const { register, user, loading } = useAuth();
+  const { register, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ export default function Register() {
     }
   };
 
-  if (!loading && user) return <Navigate to="/dashboard" replace />;
+  if (!authLoading && user) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="mx-auto max-w-sm">
